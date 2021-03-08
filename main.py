@@ -11,36 +11,43 @@ def input_reader():
     else:
         if sys.argv[1] == '-c':
             if sys.argv[2] == '-e':
-                caesars_encoder()
+                encoder('c')
             elif sys.argv[2] == '-d':
-                caesars_decoder()
+                decoder('c')
             elif sys.argv[2] == '-j':
                 caesars_crypto_text()
             else:
                 caesars_crypto_no_text()
         else:
             if sys.argv[2] == '-e':
-                affine_encoder()
+                encoder('a')
             elif sys.argv[2] == '-d':
-                affine_decoder()
+                decoder('a')
             elif sys.argv[2] == '-j':
                 affine_crypto_text()
             else:
                 affine_crypto_no_text()
 
 
-def encoder(a):
+def encoder(arg):
     with open('plain.txt', 'r') as plain_file:
         text = plain_file.read()
     with open('key.txt', 'r') as key_file:
-        b = int(key_file.read().split(' ')[0])
+        line = key_file.read().split(' ')
+        b = int(line[0])
+        a = int(line[1])
         if b > 25 | b < 0:
             print('Error: wrong key')
+        elif arg == 'a' and a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
+            print('Error: wrong argument')
     text = text.lower()
     new_text = ''
     for el in text:
         if ord(el) > 96 & ord(el) < 123:
-            new_text += chr((ord(el) - ord('a') + b) % 26 + ord('a'))
+            if arg == 'c':
+                new_text += chr((ord(el) - ord('a') + b) % 26 + ord('a'))
+            else:
+                new_text += chr(((ord(el) - ord('a')) * a + b) % 26 + ord('a'))
         else:
             new_text += el
     with open('crypto.txt', 'w') as encoded_file:
@@ -48,17 +55,24 @@ def encoder(a):
     print('Encryption ready')
 
 
-def caesars_decoder():
+def decoder(arg):
     with open('crypto.txt', 'r') as encoded_file:
         text = encoded_file.read()
     with open('key.txt', 'r') as key_file:
-        key = int(key_file.read().split(' ')[0])
-        if key > 25 | key < 0:
+        line = key_file.read().split(' ')
+        b = int(line[0])
+        a = int(line[1])
+        if b > 25 | b < 0:
             print('Error: wrong key')
+        elif arg == 'a' and a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
+            print('Error: wrong argument')
     new_text = ''
     for el in text:
         if ord(el) > 96 & ord(el) < 123:
-            new_text += chr((ord(el) - ord('a') - key) % 26 + ord('a'))
+            if arg == 'c':
+                new_text += chr((ord(el) - ord('a') - b) % 26 + ord('a'))
+            else:
+                new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
         else:
             new_text += el
     with open('decrypt.txt', 'w') as plain_file:
@@ -102,47 +116,6 @@ def caesars_crypto_no_text():
     with open('decrypt.txt', 'w') as force_f:
         force_f.write('\n'.join(possibilities))
     print('Brute force attack done')
-
-
-def affine_encoder():
-    with open('plain.txt', 'r') as plain_file:
-        text = plain_file.read()
-    with open('key.txt', 'r') as key_file:
-        line = key_file.read().split(' ')
-        b = int(line[0])
-        a = int(line[1])
-        if b > 25 | b < 0:
-            print('Error: wrong key')
-    text = text.lower()
-    new_text = ''
-    for el in text:
-        if ord(el) > 96 & ord(el) < 123:
-            new_text += chr(((ord(el) - ord('a')) * a + b) % 26 + ord('a'))
-        else:
-            new_text += el
-    with open('crypto.txt', 'w') as encoded_file:
-        encoded_file.write(new_text)
-    print('Encryption ready')
-
-
-def affine_decoder():
-    with open('crypto.txt', 'r') as encoded_file:
-        text = encoded_file.read()
-    with open('key.txt', 'r') as key_file:
-        line = key_file.read().split(' ')
-        b = int(line[0])
-        a = int(line[1])
-        if b > 25 | b < 0 | a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
-            print('Error: wrong key')
-    new_text = ''
-    for el in text:
-        if ord(el) > 96 & ord(el) < 123:
-            new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
-        else:
-            new_text += el
-    with open('decrypt.txt', 'w') as plain_file:
-        plain_file.write(new_text)
-    print('Decryption ready')
 
 
 def affine_crypto_text():
