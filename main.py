@@ -1,3 +1,13 @@
+#########################################################################
+# A simple program which works with Caesar's and affine ciphers, based on chosen options:
+# first option: -c for Caesar's cipher, -a for affine cipher
+# second option: -e for encoding, -d for decoding,
+# -j for cryptanalysis with some given probe of a text, -k for cryptanalysis with neither the key nor the text probe.
+# after choosing one from each category, the program performs the chosen operation and writes its input to a file.
+#########################################################################
+# Author: A. Ekalt
+###########
+
 import sys
 
 
@@ -6,8 +16,8 @@ def input_reader():
             or (sys.argv[2] != '-e' and sys.argv[2] != '-d' and sys.argv[2] != '-j' and sys.argv[2] != '-k'):
         print('Compile the file writing the following after the name main.py: -c for Caesar\'s cipher '
               '\nor -a for affine cipher.' +
-              '\nThen write -e for encryption or -d for decryption or -j for cryptoanalysis with declared text' +
-              '\nor -k for cyptoanalysis with the given key.')
+              '\nThen write -e for encryption or -d for decryption or -j for cryptanalysis with declared text' +
+              '\nor -k for cryptanalysis without neither the text probe nor the key.')
     else:
         if sys.argv[1] == '-c':
             if sys.argv[2] == '-e':
@@ -117,7 +127,7 @@ def caesars_crypto_no_text():
         force_f.write('\n'.join(possibilities))
     print('Brute force attack done')
 
-
+#not working for now
 def affine_crypto_text():
     with open('crypto.txt', 'r') as encoded_file:
         crypto = encoded_file.read()
