@@ -25,7 +25,7 @@ def input_reader():
             elif sys.argv[2] == '-d':
                 decoder('c')
             elif sys.argv[2] == '-j':
-                caesars_crypto_text()
+                crypto_text('c')
             else:
                 crypto_no_text('c')
         else:
@@ -34,7 +34,7 @@ def input_reader():
             elif sys.argv[2] == '-d':
                 decoder('a')
             elif sys.argv[2] == '-j':
-                affine_crypto_text()
+                crypto_text('a')
             else:
                 crypto_no_text('a')
 
@@ -77,39 +77,31 @@ def decoder(arg):
     print('Decryption ready')
 
 
-def caesars_crypto_text():
+def crypto_text(arg):
     origin = read_file('crypto.txt')
     crypto = origin.lower()
     example = read_file('extra.txt')
     if not example[0].isalpha():
         print('Could not calculate the key')
     key = (ord(crypto[0]) - ord(example[0].lower())) % 26
-    new_text = ''
-    for el in crypto:
-        if ord(el) > 96 & ord(el) < 123:
-            new_text += chr((ord(el) - ord('a') - key) % 26 + ord('a'))
-        else:
-            new_text += el
-    write_file('decrypt.txt', change_letters(new_text, origin))
-    write_file('key_found.txt', str(key))
-    print('Decryption ready')
-
-
-def affine_crypto_text():
-    origin = read_file('crypto.txt')
-    crypto = origin.lower()
-    example = read_file('extra.txt')
     a = calc_key(crypto, example)[1]
     b = calc_key(crypto, example)[0]
     new_text = ''
     for el in crypto:
         if ord(el) > 96 & ord(el) < 123:
-            new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
+            if arg == 'c':
+                new_text += chr((ord(el) - ord('a') - key) % 26 + ord('a'))
+            else:
+                new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
         else:
             new_text += el
-    write_file('key_found.txt', ' '.join([str(b), str(a)]))
     write_file('decrypt.txt', change_letters(new_text, origin))
+    if arg == 'c':
+        write_file('key_found.txt', str(key))
+    else:
+        write_file('key_found.txt', ' '.join([str(b), str(a)]))
     print('Decryption ready')
+
 
 
 def crypto_no_text(arg):
