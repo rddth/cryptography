@@ -10,9 +10,6 @@
 import string
 import sys
 
-#for linear equations in finding affine cipher's key
-import numpy as np
-
 
 def input_reader():
     if len(sys.argv) < 3 or (sys.argv[1] != '-a' and sys.argv[1] != '-c') \
@@ -43,137 +40,104 @@ def input_reader():
 
 
 def encoder(arg):
-    try:
-        with open('plain.txt', 'r') as plain_file:
-            text = plain_file.read()
-        with open('key.txt', 'r') as key_file:
-            line = key_file.read().split(' ')
-            b = int(line[0])
-            a = int(line[1])
-            if b > 25 | b < 0:
-                print('Error: wrong key')
-            elif arg == 'a' and a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
-                print('Error: wrong argument')
-        text = text.lower()
-        new_text = ''
-        for el in text:
-            if ord(el) > 96 & ord(el) < 123:
-                if arg == 'c':
-                    new_text += chr((ord(el) - ord('a') + b) % 26 + ord('a'))
-                else:
-                    new_text += chr(((ord(el) - ord('a')) * a + b) % 26 + ord('a'))
+    origin = read_file('plain.txt')
+    line = read_file('key.txt').split()
+    a = get_affine_keys(line)[0]
+    b = get_affine_keys(line)[1]
+    text = origin.lower()
+    new_text = ''
+    for el in text:
+        if ord(el) > 96 & ord(el) < 123:
+            if arg == 'c':
+                new_text += chr((ord(el) - ord('a') + b) % 26 + ord('a'))
             else:
-                new_text += el
-        with open('crypto.txt', 'w') as encoded_file:
-            encoded_file.write(new_text)
-        print('Encryption ready')
-    except FileNotFoundError:
-        print('Input file/-s not found')
+                new_text += chr(((ord(el) - ord('a')) * a + b) % 26 + ord('a'))
+        else:
+            new_text += el
+    write_file('crypto.txt', change_letters(new_text, origin))
+    print('Encryption ready')
 
 
 def decoder(arg):
-    try:
-        with open('crypto.txt', 'r') as encoded_file:
-            text = encoded_file.read()
-        with open('key.txt', 'r') as key_file:
-            line = key_file.read().split(' ')
-            b = int(line[0])
-            a = int(line[1])
-            if b > 25 | b < 0:
-                print('Error: wrong key')
-            elif arg == 'a' and a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
-                print('Error: wrong argument')
-        new_text = ''
-        for el in text:
-            if ord(el) > 96 & ord(el) < 123:
-                if arg == 'c':
-                    new_text += chr((ord(el) - ord('a') - b) % 26 + ord('a'))
-                else:
-                    new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
+    origin = read_file('crypto.txt')
+    line = read_file('key.txt').split()
+    a = get_affine_keys(line)[0]
+    b = get_affine_keys(line)[1]
+    text = origin.lower()
+    new_text = ''
+    for el in text:
+        if ord(el) > 96 & ord(el) < 123:
+            if arg == 'c':
+                new_text += chr((ord(el) - ord('a') - b) % 26 + ord('a'))
             else:
-                new_text += el
-        with open('decrypt.txt', 'w') as plain_file:
-            plain_file.write(new_text)
-        print('Decryption ready')
-    except FileNotFoundError:
-        print('Input file/-s not found')
+                new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
+        else:
+            new_text += el
+    write_file('decrypt.txt', change_letters(new_text, origin))
+    print('Decryption ready')
 
 
 def caesars_crypto_text():
-    try:
-        with open('crypto.txt', 'r') as encoded_file:
-            crypto = encoded_file.read()
-        with open('extra.txt', 'r') as extra:
-            example = extra.read()
-        if ord(example) >= 123 | ord(example) < 97:
-            print('Could not calculate the key')
-        key = (ord(crypto[0][0]) - ord(example[0][0].lower())) % 26
-        new_text = ''
-        for el in crypto:
-            if ord(el) > 96 & ord(el) < 123:
-                new_text += chr((ord(el) - ord('a') - key) % 26 + ord('a'))
-            else:
-                new_text += el
-        with open('decrypt.txt', 'w') as plain_file:
-            plain_file.write(new_text)
-        with open('key_found.txt', 'w') as key_file:
-            key_file.write(str(key))
-        print('Decryption ready')
-    except FileNotFoundError:
-        print('Input file/-s not found')
-
-
-def crypto_no_text(arg):
-    try:
-        with open('crypto.txt', 'r') as encoded_file:
-            text = encoded_file.read()
-        possibilities = []
-        a_s = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]
-        if arg == 'c':
-            for i in range(0, 26):
-                possibility = ''
-                for el in text:
-                    if ord(el) > 96 & ord(el) < 123:
-                        possibility += chr((ord(el) - ord('a') - i) % 26 + ord('a'))
-                    else:
-                        possibility += el
-                possibilities.append(possibility)
+    origin = read_file('crypto.txt')
+    crypto = origin.lower()
+    example = read_file('extra.txt')
+    if not example[0].isalpha():
+        print('Could not calculate the key')
+    key = (ord(crypto[0]) - ord(example[0].lower())) % 26
+    new_text = ''
+    for el in crypto:
+        if ord(el) > 96 & ord(el) < 123:
+            new_text += chr((ord(el) - ord('a') - key) % 26 + ord('a'))
         else:
-            for a in a_s:
-                for b in range(0, 26):
-                    possibility = ''
-                    for el in text:
-                        if ord(el) > 96 & ord(el) < 123:
-                            possibility += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
-                        else:
-                            possibility += el
-                    possibilities.append(possibility)
-        with open('decrypt.txt', 'w') as force_f:
-            force_f.write('\n'.join(possibilities))
-        print('Brute force attack done')
-    except FileNotFoundError:
-        print('Input file/-s not found')
+            new_text += el
+    write_file('decrypt.txt', change_letters(new_text, origin))
+    write_file('key_found.txt', str(key))
+    print('Decryption ready')
 
 
 def affine_crypto_text():
-    with open('crypto.txt', 'r') as encoded_file:
-        crypto = encoded_file.read()
-    with open('extra.txt', 'r') as extra:
-        example = extra.read()
+    origin = read_file('crypto.txt')
+    crypto = origin.lower()
+    example = read_file('extra.txt')
     a = calc_key(crypto, example)[1]
     b = calc_key(crypto, example)[0]
-    print(calc_key(crypto, example))
     new_text = ''
     for el in crypto:
         if ord(el) > 96 & ord(el) < 123:
             new_text += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
         else:
             new_text += el
-    with open('key_found.txt', 'w') as key_file:
-        key_file.write(' '.join([str(b), str(a)]))
-    with open('decrypt.txt', 'w') as plain_file:
-        plain_file.write(new_text)
+    write_file('key_found.txt', ' '.join([str(b), str(a)]))
+    write_file('decrypt.txt', change_letters(new_text, origin))
     print('Decryption ready')
+
+
+def crypto_no_text(arg):
+    origin = read_file('crypto.txt')
+    text = origin.lower()
+    possibilities = []
+    a_s = [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]
+    if arg == 'c':
+        for i in range(0, 26):
+            possibility = ''
+            for el in text:
+                if ord(el) > 96 & ord(el) < 123:
+                    possibility += chr((ord(el) - ord('a') - i) % 26 + ord('a'))
+                else:
+                    possibility += el
+            possibilities.append(change_letters(possibility, origin))
+    else:
+        for a in a_s:
+            for b in range(0, 26):
+                possibility = ''
+                for el in text:
+                    if ord(el) > 96 & ord(el) < 123:
+                        possibility += chr(pow(a, -1, 26) * (ord(el) - ord('a') - b) % 26 + ord('a'))
+                    else:
+                        possibility += el
+                possibilities.append(change_letters(possibility, origin))
+    write_file('decrypt.txt', '\n'.join(possibilities))
+    print('Brute force attack done')
 
 
 def get_letter(letter):
@@ -194,6 +158,37 @@ def calc_key(crypto, extra):
     return key_b, key_a
 
 
+def write_file(filename, text):
+    with open(filename, 'w') as f:
+        f.write(text)
+
+
+def read_file(filename):
+    try:
+        with open(filename, 'r') as f:
+            return f.read()
+    except FileNotFoundError:
+        print('Input file not found')
+
+
+def get_affine_keys(line):
+    b = int(line[0])
+    a = int(line[1])
+    if b > 25 | b < 0:
+        print('Error: wrong key')
+    elif a not in [1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25]:
+        print('Error: wrong argument')
+    return a, b
+
+
+def change_letters(text, source):
+    new_text = ''
+    for i in range(0, len(text)):
+        if source[i].isalpha() and source[i].isupper():
+            new_text += text[i].upper()
+        else:
+            new_text += text[i]
+    return new_text
+
+
 input_reader()
-
-
